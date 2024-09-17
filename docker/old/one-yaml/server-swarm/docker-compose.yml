@@ -1,0 +1,410 @@
+version: '3'
+services:
+ server:
+  image: zabbix/zabbix-server-mysql:alpine-6.0.25
+  ports:
+   - "10051:10051"
+  volumes:
+   - /etc/localtime:/etc/localtime:ro
+   - /etc/timezone:/etc/timezone:ro 
+   - data_server:/usr/lib/zabbix/alertscripts:ro
+   - data_server:/usr/lib/zabbix/externalscripts:ro
+   - data_server:/var/lib/zabbix/dbscripts:ro
+   - data_server:/var/lib/zabbix/export:rw
+   - data_server:/var/lib/zabbix/modules:ro
+   - data_server:/var/lib/zabbix/enc:ro
+   - data_server:/var/lib/zabbix/ssh_keys:ro
+   - data_server:/var/lib/zabbix/mibs:ro
+  #  - snmptraps:/var/lib/zabbix/snmptraps:ro
+  ulimits:
+   nproc: 65535
+   nofile:
+    soft: 20000
+    hard: 40000
+  deploy:
+   resources:
+    limits:
+      cpus: '0.5'
+      memory: 512M
+    reservations:
+      cpus: '0.25'
+      memory: 256M
+   restart_policy:
+      condition: on-failure
+      delay: 3s
+      window: 60s
+   placement:
+     constraints:
+     - node.role == worker
+   replicas: 1
+  environment:
+   - DB_SERVER_HOST=server-db
+   - MYSQL_USER=zabbix
+   - MYSQL_PASSWORD=zabbix
+   - MYSQL_ROOT_PASSWORD=tocomfome@10
+   - MYSQL_DATABASE=zabbix
+   - ZBX_DEBUGLEVEL=3
+   - ZBX_TIMEOUT=30
+  networks:
+   net_backend:
+     aliases:
+      - server
+   net_frontend:
+  stop_grace_period: 30s
+  sysctls:
+   - net.ipv4.ip_local_port_range=1024 64999
+   - net.ipv4.conf.all.accept_redirects=0
+   - net.ipv4.conf.all.secure_redirects=0
+   - net.ipv4.conf.all.send_redirects=0
+  labels:
+   com.zabbix.description: "Zabbix Server with MySQL database support"
+   com.zabbix.company: "Zabbix LLC"
+   com.zabbix.component: "server"
+   com.zabbix.dbtype: "mysql"
+   com.zabbix.os: "alpine"
+
+ web:
+  image: zabbix/zabbix-web-nginx-mysql:alpine-6.0.25
+  ports:
+   - "80:8080"
+   - "443:8443"
+  volumes:
+   - /etc/localtime:/etc/localtime:ro
+   - /etc/timezone:/etc/timezone:ro
+   - data_server_web:/etc/ssl/nginx:ro
+   - data_server_web:/usr/share/zabbix/modules/:ro
+  deploy:
+   mode: global
+   resources:
+    limits:
+      cpus: '0.5'
+      memory: 512M
+    reservations:
+      cpus: '0.25'
+      memory: 256M
+   restart_policy:
+      condition: on-failure
+      delay: 3s
+      window: 60s
+   placement:
+     constraints:
+     - node.role == worker
+     max_replicas_per_node: 1
+  environment:
+   - ZBX_SERVER_HOST=server
+   - ZBX_SERVER_NAME=Homelab in Swarm
+   - ZBX_SERVER_PORT=10051
+   - DB_SERVER_HOST=server-db
+   - MYSQL_USER=zabbix
+   - MYSQL_PASSWORD=zabbix
+   - MYSQL_ROOT_PASSWORD=tocomfome@10
+   - MYSQL_DATABASE=zabbix
+   - PHP_TZ=America/Sao_Paulo
+   - ZBX_DENY_GUI_ACCESS=false
+   - PHP_FPM_PM=dynamic
+   - PHP_FPM_PM_MAX_CHILDREN=50
+   - PHP_FPM_PM_START_SERVERS=5
+   - PHP_FPM_PM_MIN_SPARE_SERVERS=5
+   - PHP_FPM_PM_MAX_SPARE_SERVERS=35
+   - PHP_FPM_PM_MAX_REQUESTS=0
+  healthcheck:
+   test: ["CMD", "curl", "-f", "http://localhost:8080/ping"]
+   interval: 10s
+   timeout: 5s
+   retries: 3
+   start_period: 30s
+  networks:
+   net_backend:
+    aliases:
+     - web
+   net_frontend:
+  stop_grace_period: 10s
+  sysctls:
+   - net.core.somaxconn=65535
+  labels:
+   com.zabbix.description: "Zabbix frontend on Nginx web-server with MySQL database support"
+   com.zabbix.company: "Zabbix LLC"
+   com.zabbix.component: "zabbix-frontend"
+   com.zabbix.webserver: "nginx"
+   com.zabbix.dbtype: "mysql"
+   com.zabbix.os: "alpine"
+
+#  proxy:
+#   image: douglasportugal/zbx-custom:v1
+#   ports:
+#    - "10071:10051"
+#   volumes:
+#    - /etc/localtime:/etc/localtime:ro
+#    - /etc/timezone:/etc/timezone:ro
+#    - data_proxy:/usr/lib/zabbix/externalscripts:ro
+#    - data_proxy:/var/lib/zabbix/modules:ro
+#    - data_proxy:/var/lib/zabbix/enc:ro
+#    - data_proxy:/var/lib/zabbix/ssh_keys:ro
+#    - data_proxy:/var/lib/zabbix/mibs:ro
+#    - data_proxy:/var/lib/zabbix/snmptraps:rw
+#   ulimits:
+#    nproc: 65535
+#    nofile:
+#     soft: 20000
+#     hard: 40000
+#   environment:
+#    - ZBX_SERVER_HOST=server
+#    - ZBX_HOSTNAME=proxy
+#    - DB_SERVER_HOST=proxy-db
+#    - MYSQL_USER=zabbix
+#    - MYSQL_PASSWORD=zabbix_proxy
+#    - MYSQL_ROOT_PASSWORD=123qwe.
+#    - MYSQL_DATABASE=zabbix_proxy
+#    - ZBX_CACHESIZE=32M
+#    - ZBX_STARTDBSYNCERS=4
+#    - ZBX_HISTORYCACHESIZE=16M
+#    - ZBX_HISTORYINDEXCACHESIZE=4M
+#    - ZBX_TIMEOUT=30
+#    - ZBX_PROXYOFFLINEBUFFER=1
+#    - ZBX_ENABLEREMOTECOMMANDS=1
+#    - ZBX_DEBUGLEVEL=3
+#    - ZBX_PROXYLOCALBUFFER=4
+#    - ZBX_CONFIGFREQUENCY=60
+#    - ZBX_HOUSEKEEPINGFREQUENCY=12
+#   deploy:
+#    resources:
+#     limits:
+#       cpus: '0.5'
+#       memory: 512M
+#     reservations:
+#       cpus: '0.25'
+#       memory: 256M
+#    restart_policy:
+#       condition: on-failure
+#       delay: 3s
+#       window: 60s
+#    placement:
+#      constraints:
+#      - node.role == worker
+#   networks:
+#    net_backend:
+#     aliases:
+#      - proxy
+#    net_frontend:
+#   stop_grace_period: 30s
+#   labels:
+#    com.zabbix.description: "Zabbix Proxy with MySQL database support"
+#    com.zabbix.company: "Homelab"
+#    com.zabbix.component: "zabbix-proxy"
+#    com.zabbix.dbtype: "mysql"
+#    com.zabbix.os: "alpine"
+
+#  java-gateway:
+#   image: zabbix/zabbix-java-gateway:alpine-6.0.25
+#   ports:
+#    - "10052:10052"
+#   deploy:
+#    restart_policy:
+#       condition: on-failure
+#    resources:
+#     limits:
+#       cpus: '0.5'
+#       memory: 256M
+#     reservations:
+#       cpus: '0.25'
+#       memory: 128M
+#   environment:
+#     - ZBX_START_POLLERS=5
+#     - ZBX_TIMEOUT=30
+# # Possible values: trace, debug, info, want, error, all, off
+#     - ZBX_DEBUGLEVEL=info
+#   networks:
+#    net_backend:
+#     aliases:
+#      - java-gateway
+#   stop_grace_period: 5s
+#   labels:
+#    com.zabbix.description: "Zabbix Java Gateway"
+#    com.zabbix.company: "Zabbix LLC"
+#    com.zabbix.component: "java-gateway"
+
+#  snmptraps:
+# # Override snmptrapd command arguments to receive SNMP traps by DNS
+# # It must be done with ZBX_SNMP_TRAP_USE_DNS=true environment variable
+# #  command: /usr/sbin/snmptrapd -C -c /etc/snmp/snmptrapd.conf -Lo -A
+#   image: zabbix/zabbix-snmptraps:alpine-6.0.25
+#   ports:
+#    - "162:1162/udp"
+#   volumes:
+#    - snmptraps:/var/lib/zabbix/snmptraps:rw
+#   tmpfs: /tmp
+#   deploy:
+#    restart_policy:
+#       condition: on-failure
+#    resources:
+#     limits:
+#       cpus: '0.5'
+#       memory: 256M
+#     reservations:
+#       cpus: '0.25'
+#       memory: 128M
+#   environment:
+#     - ZBX_SNMP_TRAP_DATE_FORMAT=+%Y%m%d.%H%M%S
+#     - ZBX_SNMP_TRAP_FORMAT=\n
+# # To use DNS instead of sender IP override container's command: /usr/sbin/snmptrapd -C -c /etc/snmp/snmptrapd.conf -Lo -A
+# # Need to remove "-n" command argument
+#     - ZBX_SNMP_TRAP_USE_DNS=false
+#   networks:
+#    net_frontend:
+#     aliases:
+#      - snmptraps
+#    net_backend:
+#   stop_grace_period: 5s
+#   labels:
+#    com.zabbix.description: "Zabbix snmptraps"
+#    com.zabbix.company: "Zabbix LLC"
+#    com.zabbix.component: "snmptraps"
+
+#  web-service:
+#   image: zabbix/zabbix-web-service:alpine-6.0.25
+#   ports:
+#    - "10053:10053"
+#   volumes:
+#    - web-service:/var/lib/zabbix/enc:ro
+#    - web-service_chrome_dp.json:chrome_dp.json:ro
+#   tmpfs: /tmp
+#   deploy:
+#    restart_policy:
+#       condition: on-failure
+#    resources:
+#     limits:
+#       cpus: '0.5'
+#       memory: 512M
+#     reservations:
+#       cpus: '0.25'
+#       memory: 256M
+#   environment:
+#     - ZBX_DEBUGLEVEL=3
+#     - ZBX_ALLOWEDIP=zabbix-server
+#     - ZBX_LISTENPORT=10053
+# # - ZBX_LISTENIP=
+#     - ZBX_TIMEOUT=30
+# # ZBX_TLSACCEPT=unencrypted
+# # ZBX_TLSCAFILE=
+# # ZBX_TLSCERTFILE=
+# # ZBX_TLSKEYFILE=
+# # ZBX_IGNOREURLCERTERRORS=0
+#   networks:
+#    net_backend:
+#     aliases:
+#      - web-service
+#   stop_grace_period: 5s
+#   labels:
+#    com.zabbix.description: "Zabbix web service"
+#    com.zabbix.company: "Zabbix LLC"
+#    com.zabbix.component: "web-service"
+
+ server-db:
+  image: mariadb:10.6.14
+  ports:
+   - "33060:3306"
+  command:
+   - mysqld
+   - --character-set-server=utf8mb4
+   - --collation-server=utf8mb4_bin
+   - --default-authentication-plugin=mysql_native_password
+  volumes:
+   - data_database_server:/var/lib/mysql:rw
+  environment:
+   - MYSQL_USER=zabbix
+   - MYSQL_PASSWORD=zabbix
+   - MYSQL_ROOT_PASSWORD=tocomfome@10
+  deploy:
+   restart_policy:
+      condition: on-failure
+      delay: 3s
+      window: 60s
+   placement:
+     constraints:
+     - node.role == manager    
+  stop_grace_period: 1m
+  networks:
+   net_backend:
+    aliases:
+     - server-db
+   net_frontend:
+
+#  proxy-db:
+#   image: mariadb:10.6.14
+#   ports:
+#    - "33061:3306"
+#   command:
+#    - mysqld
+#    - --character-set-server=utf8mb4
+#    - --collation-server=utf8mb4_bin
+#    - --default-authentication-plugin=mysql_native_password
+#   volumes:
+#    - data_database_proxy:/var/lib/mysql:rw
+#   environment:
+#    - MYSQL_USER=zabbix
+#    - MYSQL_PASSWORD=zabbix
+#    - MYSQL_ROOT_PASSWORD=123qwe.
+#   deploy:
+#    resources:
+#     limits:
+#       cpus: '0.5'
+#       memory: 512M
+#     reservations:
+#       cpus: '0.25'
+#       memory: 256M
+#    restart_policy:
+#       condition: on-failure
+#       delay: 3s
+#       window: 60s
+#    placement:
+#      constraints:
+#      - node.role == manager     
+#   stop_grace_period: 1m
+#   networks:
+#    net_backend:
+#     aliases:
+#      - proxy-db
+#    net_frontend:
+
+volumes:
+ data_database_server:
+   driver_opts:
+     type: "nfs"
+     o: "addr=192.168.1.200,rw,nolock"
+     device: ":/storage/zabbix/server/db"
+ data_server:
+   driver_opts:
+     type: "nfs"
+     o: "addr=192.168.1.200,rw,nolock"
+     device: ":/storage/zabbix/server/data"
+ data_server_web:
+   driver_opts:
+     type: "nfs"
+     o: "addr=192.168.1.200,rw,nolock"
+     device: ":/storage/zabbix/server/web"
+#  data_database_proxy:
+#    driver_opts:
+#      type: "nfs"
+#      o: "addr=192.168.1.200,rw,nolock"
+#      device: ":/storage/zabbix/proxy/db"
+#  data_proxy:
+#    driver_opts:
+#      type: "nfs"
+#      o: "addr=192.168.1.200,rw,nolock"
+#      device: ":/storage/zabbix/proxy/data"
+#  snmptraps:
+#    driver_opts:
+#      type: "nfs"
+#      o: "addr=192.168.1.200,rw,nolock"
+#      device: ":/storage/zabbix/snmptraps/data"
+#  web-service:
+#    driver_opts:
+#      type: "nfs"
+#      o: "addr=192.168.1.200,rw,nolock"
+#      device: ":/storage/zabbix/web-service/data"
+
+networks:
+  net_frontend:
+    driver: overlay
+  net_backend:
+    driver: overlay

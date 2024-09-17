@@ -1,0 +1,98 @@
+version: '3.5'
+services:
+ zbx-prx-mysql:
+  #image: zabbix/zabbix-proxy-mysql:ol-6.0.21
+  #image: zbx-prx-mysql-odbc:v1
+  image: douglasportugal/zbx-custom:55
+  ports:
+   - "10051:10051"
+  volumes:
+   - /etc/localtime:/etc/localtime:ro
+   - /etc/timezone:/etc/timezone:ro
+   - ./zabbix-proxy/externalscripts:/usr/lib/zabbix/externalscripts:ro
+   - ./zabbix-proxy/modules:/var/lib/zabbix/modules:ro
+   - ./zabbix-proxy/enc:/var/lib/zabbix/enc:ro
+   - ./zabbix-proxy/ssh_keys:/var/lib/zabbix/ssh_keys:ro
+   - ./zabbix-proxy/mibs:/var/lib/zabbix/mibs:ro
+   - ./zabbix-proxy/snmptraps:/var/lib/zabbix/snmptraps:rw 
+  ulimits:
+   nproc: 65535
+   nofile:
+    soft: 20000
+    hard: 40000
+  environment:
+   - ZBX_SERVER_HOST=192.168.0.251;192.168.0.252;192.168.0.253
+   - ZBX_HOSTNAME=zbx-prx-02-mysql
+   - DB_SERVER_HOST=mariadb-prx
+   - MYSQL_USER=zabbix
+   - MYSQL_PASSWORD=zabbix_proxy
+   - MYSQL_ROOT_PASSWORD=123qwe.
+   - MYSQL_DATABASE=zabbix_proxy
+   - ZBX_CACHESIZE=32M
+   - ZBX_STARTDBSYNCERS=4
+   - ZBX_HISTORYCACHESIZE=16M
+   - ZBX_HISTORYINDEXCACHESIZE=4M
+   - ZBX_TIMEOUT=30
+   - ZBX_PROXYOFFLINEBUFFER=1
+   - ZBX_ENABLEREMOTECOMMANDS=1
+   - ZBX_DEBUGLEVEL=3
+   - ZBX_PROXYLOCALBUFFER=4
+   - ZBX_CONFIGFREQUENCY=60
+   - ZBX_HOUSEKEEPINGFREQUENCY=12
+  depends_on:
+   - mariadb-prx
+  networks:
+   zbx_net_backend:
+    aliases:
+     - zbx-prx-mysql
+   zbx_net_frontend:
+  stop_grace_period: 30s
+  labels:
+   com.zabbix.description: "Zabbix Proxy with MySQL database support"
+   com.zabbix.company: "Homelab"
+   com.zabbix.component: "zabbix-proxy"
+   com.zabbix.dbtype: "mysql"
+   com.zabbix.os: "oracle linux"
+
+ mariadb-prx:
+  image: mariadb:10.6.14
+  ports:
+   - "33060:3306"
+  command:
+   - mysqld
+   - --character-set-server=utf8mb4
+   - --collation-server=utf8mb4_bin
+   - --default-authentication-plugin=mysql_native_password
+  volumes:
+   - ./zabbix-proxy/var/lib/mysql:/var/lib/mysql:rw
+  environment:
+   - MYSQL_USER=zabbix
+   - MYSQL_PASSWORD=zabbix
+   - MYSQL_ROOT_PASSWORD=123qwe.
+  stop_grace_period: 1m
+  networks:
+   zbx_net_backend:
+    aliases:
+     - mariadb-prx
+   zbx_net_frontend:
+
+ db_data_mysql:
+  image: busybox
+  volumes:
+   - ./zabbix-proxy/var/lib/mysql:/var/lib/mysql:rw
+
+networks:
+  zbx_net_frontend:
+    driver: bridge
+    driver_opts:
+      com.docker.network.enable_ipv6: "false"
+    ipam:
+      driver: default
+
+  zbx_net_backend:
+    driver: bridge
+    driver_opts:
+      com.docker.network.enable_ipv6: "false"
+    internal: true
+    ipam:
+      driver: default

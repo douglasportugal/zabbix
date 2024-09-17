@@ -1,0 +1,1 @@
+Esse são arquivos yaml no qual ano passado que comecei a mexer com docker, guardei num repo privado.
