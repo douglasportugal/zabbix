@@ -1,0 +1,57 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+  templates:
+    - uuid: fe128122a9f444d69a4611b763b4261d
+      template: 'MTR Custom'
+      name: 'MTR Custom'
+      groups:
+        - name: Templates
+      items:
+        - uuid: 7e72ef5d3df1402696763de33078851e
+          name: 'Get JSON for {$DEST1}'
+          key: 'mtr[{$DEST1}]'
+          delay: 3m
+          value_type: TEXT
+      discovery_rules:
+        - uuid: a3912716a4134f02b1105b0b3fb3d058
+          name: 'MTR: Discover for {$DEST1}'
+          type: DEPENDENT
+          key: mtr.discovery1
+          enabled_lifetime_type: DISABLE_NEVER
+          item_prototypes:
+            - uuid: 9f30bdf5a2764f10b49db10e01298af0
+              name: 'MTR: Count {#HOPS_COUNT} - Average on Host {#HOPS_HOST} - {$DEST1}'
+              type: DEPENDENT
+              key: 'mtr.ip[{$DEST1},{#HOPS_COUNT},{#HOPS_HOST}]'
+              units: '!ms'
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - $.report.hubs
+                - type: JSONPATH
+                  parameters:
+                    - '$.[?(@.count == "{#HOPS_COUNT}")]["Avg"].first()'
+              master_item:
+                key: 'mtr[{$DEST1}]'
+              tags:
+                - tag: Type
+                  value: Custom
+          master_item:
+            key: 'mtr[{$DEST1}]'
+          lld_macro_paths:
+            - lld_macro: '{#HOPS_COUNT}'
+              path: '$.[''count'']'
+            - lld_macro: '{#HOPS_HOST}'
+              path: '$.[''host'']'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.report.hubs
+      tags:
+        - tag: Type
+          value: Custom
+      macros:
+        - macro: '{$DEST1}'
