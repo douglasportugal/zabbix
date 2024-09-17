@@ -1,0 +1,530 @@
+zabbix_export:
+  version: '6.0'
+  date: '2023-12-31T11:58:44Z'
+  groups:
+    - uuid: a20980ae18404f6fb83bf3ca6b593cb8
+      name: homelab
+  templates:
+    - uuid: 16761edf1de042be967c8d3cabea365c
+      template: 'Windows by Prom - Custom'
+      name: 'Windows by Prom - Custom'
+      groups:
+        - name: homelab
+      items:
+        - uuid: 5e776b69b10342cd96988144f89d0d0e
+          name: 'Windows: Context switches per second - ajustar'
+          type: DEPENDENT
+          key: context.switches
+          delay: '0'
+          value_type: FLOAT
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - windows_system_context_switches_total
+                - value
+                - ''
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  // Converter para formato padrão
+                  const numeroFormatado = parseFloat(value);
+                  
+                  return(numeroFormatado);
+                  
+          master_item:
+            key: node_exporter.get
+          tags:
+            - tag: monitoringtype
+              value: prometheus
+        - uuid: c9a009a810fa4f919b5dbec95e9e23f2
+          name: 'Windows: CPU DPC time'
+          type: DEPENDENT
+          key: cpu.dpc.time
+          delay: '0'
+          units: '%'
+          description: verificado
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - windows_cpu_dpcs_total
+                - function
+                - avg
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  // Converter para formato padrão
+                  const numeroFormatado = parseFloat(value[0]);
+                  
+                  return(numeroFormatado);
+                  
+          master_item:
+            key: node_exporter.get
+          tags:
+            - tag: monitoringtype
+              value: prometheus
+        - uuid: 831da43d494a45fea347fe11ca2226bf
+          name: 'Windows: CPU interrupt time'
+          type: DEPENDENT
+          key: cpu.interrupt.time
+          delay: '0'
+          units: '%'
+          description: verificado
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - windows_cpu_clock_interrupts_total
+                - function
+                - avg
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  // Converter para formato padrão
+                  const numeroFormatado = parseFloat(value[0]);
+                  
+                  return(numeroFormatado);
+                  
+          master_item:
+            key: node_exporter.get
+          tags:
+            - tag: monitoringtype
+              value: prometheus
+        - uuid: 6ef9ed87222b48e0a5ae125fd47880fb
+          name: 'Windows: CPU privileged time'
+          type: DEPENDENT
+          key: cpu.privileged.time
+          delay: '0'
+          units: '%'
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - windows_cpu_time_total
+                - function
+                - avg
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  // Converter para formato padrão
+                  const numeroFormatado = parseFloat(value[0]);
+                  
+                  return(numeroFormatado);
+                  
+          master_item:
+            key: node_exporter.get
+          tags:
+            - tag: monitoringtype
+              value: prometheus
+        - uuid: 2ff5c129f3ad4f3394ac5f2dfa3df48f
+          name: 'Windows: CPU queue length'
+          type: DEPENDENT
+          key: cpu.queue.length
+          delay: '0'
+          description: verificado
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - windows_system_processor_queue_length
+                - value
+                - ''
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  // Converter para formato padrão
+                  const numeroFormatado = parseFloat(value);
+                  
+                  return(numeroFormatado);
+                  
+          master_item:
+            key: node_exporter.get
+          tags:
+            - tag: monitoringtype
+              value: prometheus
+        - uuid: 1c7c90014ee741ebaff9f4613425886c
+          name: 'Windows: Memory Available - custom'
+          type: DEPENDENT
+          key: memory.available
+          delay: '0'
+          units: B
+          description: verificado
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - windows_memory_available_bytes
+                - value
+                - ''
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  // Converter para formato padrão
+                  const numeroFormatado = parseFloat(value);
+                  
+                  return(numeroFormatado);
+                  
+          master_item:
+            key: node_exporter.get
+          tags:
+            - tag: monitoringtype
+              value: prometheus
+        - uuid: 4598a26d640b468c9adb88a6c5dba505
+          name: 'Windows: Memory cache bytes'
+          type: DEPENDENT
+          key: memory.cache.bytes
+          delay: '0'
+          units: B
+          description: verificado
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - windows_memory_cache_bytes
+                - value
+                - ''
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  // Converter para formato padrão
+                  const numeroFormatado = parseFloat(value);
+                  
+                  return(numeroFormatado);
+                  
+          master_item:
+            key: node_exporter.get
+          tags:
+            - tag: monitoringtype
+              value: prometheus
+        - uuid: c05f0b192b2149c0a6e7d2dd293cc572
+          name: 'Windows: Memory cache faults - custom/verificar'
+          type: DEPENDENT
+          key: memory.cache.faults
+          delay: '0'
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - windows_memory_cache_faults_total
+                - function
+                - avg
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  // Converter para formato padrão
+                  const numeroFormatado = parseFloat(value[0]);
+                  
+                  return(numeroFormatado);
+                  
+          master_item:
+            key: node_exporter.get
+          tags:
+            - tag: monitoringtype
+              value: prometheus
+        - uuid: 5fcd25411a4b41d1aac61ad46a849b19
+          name: 'Windows: Memory commit limit - custom/verificar'
+          type: DEPENDENT
+          key: memory.commit.limit
+          delay: '0'
+          value_type: FLOAT
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - windows_memory_commit_limit
+                - function
+                - avg
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  // Converter para formato padrão
+                  const numeroFormatado = parseFloat(value);
+                  
+                  return(numeroFormatado);
+                  
+          master_item:
+            key: node_exporter.get
+          tags:
+            - tag: monitoringtype
+              value: prometheus
+        - uuid: c51d27ca3531405f84e907603a7ecb7c
+          name: 'Windows: Memory commited -custom/verrificar'
+          type: DEPENDENT
+          key: memory.commited
+          delay: '0'
+          value_type: FLOAT
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - windows_memory_committed_bytes
+                - value
+                - ''
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  // Converter para formato padrão
+                  const numeroFormatado = parseFloat(value);
+                  
+                  return(numeroFormatado);
+                  
+          master_item:
+            key: node_exporter.get
+          tags:
+            - tag: monitoringtype
+              value: prometheus
+        - uuid: 28d1c48e99b0489797c3bf4399186dfb
+          name: 'Windows: Memory peak - custom/verificar'
+          type: DEPENDENT
+          key: memory.peak
+          delay: '0'
+          units: B
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - windows_memory_cache_bytes_peak
+                - value
+                - ''
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  // Converter para formato padrão
+                  const numeroFormatado = parseFloat(value);
+                  
+                  return(numeroFormatado);
+                  
+          master_item:
+            key: node_exporter.get
+          tags:
+            - tag: monitoringtype
+              value: prometheus
+        - uuid: 205fecd6c0c44ab6925b4e42fe7fc98e
+          name: 'Windows: Get node_exporter metrics'
+          type: HTTP_AGENT
+          key: node_exporter.get
+          history: 1h
+          trends: '0'
+          value_type: TEXT
+          url: 'http://{HOST.CONN}:{$NODE_EXPORTER_PORT}/metrics'
+          tags:
+            - tag: component
+              value: raw
+            - tag: monitoringtype
+              value: prometheus
+      discovery_rules:
+        - uuid: 86a9442be4084a69b7e5781eff9c53fc
+          name: 'Block devices discovery'
+          type: DEPENDENT
+          key: 'vfs.fs.discovery[node_exporter]'
+          delay: '0'
+          lifetime: 0d
+          item_prototypes:
+            - uuid: d19249c0e5c940e4adde4faa107843a6
+              name: '{#DEVNAME} Idle Total'
+              type: DEPENDENT
+              key: 'vfs.idle.total[node_exporter,"{#DEVNAME}"]'
+              delay: '0'
+              value_type: FLOAT
+              units: s
+              preprocessing:
+                - type: PROMETHEUS_PATTERN
+                  parameters:
+                    - 'windows_logical_disk_idle_seconds_total{volume=~".+:"}'
+                    - value
+                    - ''
+                - type: JAVASCRIPT
+                  parameters:
+                    - |
+                      // Converter para formato padrão
+                      const numeroFormatado = parseFloat(value[0]);
+                      
+                      return(numeroFormatado);
+                      
+              master_item:
+                key: node_exporter.get
+              tags:
+                - tag: monitoringtype
+                  value: prometheus
+            - uuid: c18dfd86b60c4f3bb1a699f7c6d73e40
+              name: '{#DEVNAME} Read latency'
+              type: DEPENDENT
+              key: 'vfs.read.latency[node_exporter,"{#DEVNAME}"]'
+              delay: '0'
+              units: s
+              preprocessing:
+                - type: PROMETHEUS_PATTERN
+                  parameters:
+                    - 'windows_logical_disk_read_latency_seconds_total{volume=~".+:"}'
+                    - value
+                    - ''
+                - type: JAVASCRIPT
+                  parameters:
+                    - |
+                      // Converter para formato padrão
+                      const numeroFormatado = parseFloat(value[0]);
+                      
+                      return(numeroFormatado);
+                      
+              master_item:
+                key: node_exporter.get
+              tags:
+                - tag: monitoringtype
+                  value: prometheus
+            - uuid: ea4d3541c05d46d8823402552c03821c
+              name: '{#DEVNAME} Read size - Desnecessario'
+              type: DEPENDENT
+              key: 'vfs.read.size[node_exporter,"{#DEVNAME}"]'
+              delay: '0'
+              status: DISABLED
+              discover: NO_DISCOVER
+              units: B
+              preprocessing:
+                - type: PROMETHEUS_PATTERN
+                  parameters:
+                    - 'windows_logical_disk_read_bytes_total{volume=~".+:"}'
+                    - value
+                    - ''
+                - type: JAVASCRIPT
+                  parameters:
+                    - |
+                      // Converter para formato padrão
+                      const numeroFormatado = parseFloat(value);
+                      
+                      return(numeroFormatado);
+                      
+              master_item:
+                key: node_exporter.get
+              tags:
+                - tag: monitoringtype
+                  value: prometheus
+            - uuid: e0ee601ea4ec4567bf938456db306d46
+              name: '{#DEVNAME} Read total - Desnecessario'
+              type: DEPENDENT
+              key: 'vfs.read.total[node_exporter,"{#DEVNAME}"]'
+              delay: '0'
+              status: DISABLED
+              discover: NO_DISCOVER
+              units: B
+              preprocessing:
+                - type: PROMETHEUS_PATTERN
+                  parameters:
+                    - 'windows_logical_disk_read_bytes_total{volume=~".+:"}'
+                    - value
+                    - ''
+                - type: JAVASCRIPT
+                  parameters:
+                    - |
+                      // Converter para formato padrão
+                      const numeroFormatado = parseFloat(value);
+                      
+                      return(numeroFormatado);
+                      
+              master_item:
+                key: node_exporter.get
+              tags:
+                - tag: monitoringtype
+                  value: prometheus
+            - uuid: 04894239f2db4e7492a9dd31570dd969
+              name: '{#DEVNAME} Requets Queued'
+              type: DEPENDENT
+              key: 'vfs.requests.queued[node_exporter,"{#DEVNAME}"]'
+              delay: '0'
+              preprocessing:
+                - type: PROMETHEUS_PATTERN
+                  parameters:
+                    - 'windows_logical_disk_requests_queued{volume=~".+:"}'
+                    - value
+                    - ''
+                - type: JAVASCRIPT
+                  parameters:
+                    - |
+                      // Converter para formato padrão
+                      const numeroFormatado = parseFloat(value);
+                      
+                      return(numeroFormatado);
+                      
+              master_item:
+                key: node_exporter.get
+              tags:
+                - tag: monitoringtype
+                  value: prometheus
+            - uuid: 6f3a594bdd13409ba2c89149e4624b5a
+              name: '{#DEVNAME} Total space'
+              type: DEPENDENT
+              key: 'vfs.total.size[node_exporter,"{#DEVNAME}"]'
+              delay: '0'
+              units: B
+              preprocessing:
+                - type: PROMETHEUS_PATTERN
+                  parameters:
+                    - 'windows_logical_disk_size_bytes{volume=~".+:"}'
+                    - value
+                    - ''
+                - type: JAVASCRIPT
+                  parameters:
+                    - |
+                      // Converter para formato padrão
+                      const numeroFormatado = parseFloat(value);
+                      
+                      return(numeroFormatado);
+                      
+              master_item:
+                key: node_exporter.get
+              tags:
+                - tag: monitoringtype
+                  value: prometheus
+            - uuid: c4e5aa6ce7484f68a7e975e9d82d2ef1
+              name: '{#DEVNAME} Used space'
+              type: DEPENDENT
+              key: 'vfs.used.size[node_exporter,"{#DEVNAME}"]'
+              delay: '0'
+              units: B
+              preprocessing:
+                - type: PROMETHEUS_PATTERN
+                  parameters:
+                    - 'windows_logical_disk_free_bytes{volume=~".+:"}'
+                    - value
+                    - ''
+                - type: JAVASCRIPT
+                  parameters:
+                    - |
+                      // Converter para formato padrão
+                      const numeroFormatado = parseFloat(value);
+                      
+                      return(numeroFormatado);
+                      
+              master_item:
+                key: node_exporter.get
+              tags:
+                - tag: monitoringtype
+                  value: prometheus
+            - uuid: b84d3063bdd64dcdaed60c0e47366df6
+              name: '{#DEVNAME} Write latency'
+              type: DEPENDENT
+              key: 'vfs.write.latency[node_exporter,"{#DEVNAME}"]'
+              delay: '0'
+              units: s
+              preprocessing:
+                - type: PROMETHEUS_PATTERN
+                  parameters:
+                    - 'windows_logical_disk_read_write_latency_seconds_total{volume=~".+:"}'
+                    - value
+                    - ''
+                - type: JAVASCRIPT
+                  parameters:
+                    - |
+                      // Converter para formato padrão
+                      const numeroFormatado = parseFloat(value[0]);
+                      
+                      return(numeroFormatado);
+                      
+              master_item:
+                key: node_exporter.get
+              tags:
+                - tag: monitoringtype
+                  value: prometheus
+          master_item:
+            key: node_exporter.get
+          lld_macro_paths:
+            - lld_macro: '{#DEVNAME}'
+              path: $.labels.volume
+            - lld_macro: '{#HELP}'
+              path: $.help
+          preprocessing:
+            - type: PROMETHEUS_TO_JSON
+              parameters:
+                - 'windows_logical_disk_free_bytes{volume=~".+:"}'
+      macros:
+        - macro: '{$NODE_EXPORTER_PORT}'
+          value: '9182'

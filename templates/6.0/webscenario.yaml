@@ -1,0 +1,73 @@
+zabbix_export:
+  version: '6.0'
+  date: '2022-07-02T17:28:21Z'
+  groups:
+    -
+      uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+  templates:
+    -
+      uuid: 9a78e945c86947d9aa6688f60cef4bf1
+      template: '001 - Template Web Scenario'
+      name: '001 - Template Web Scenario'
+      description: 'Template web scenario by Douglas Portugal'
+      groups:
+        -
+          name: Templates
+      httptests:
+        -
+          uuid: 57d4c11316a544e882f6c95bd37ba657
+          name: 'Zabbix - Fronend'
+          agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36'
+          variables:
+            -
+              name: '{password}'
+              value: '{$PASS.ZABBIX}'
+            -
+              name: '{user}'
+              value: '{$USER.ZABBIX}'
+          steps:
+            -
+              name: 'First Page'
+              url: 'http://{HOST.CONN}/zabbix//index.php'
+              follow_redirects: 'NO'
+              required: 'Zabbix SIA'
+              status_codes: '200'
+            -
+              name: Login
+              url: 'http://{HOST.CONN}/zabbix//index.php'
+              posts:
+                -
+                  name: name
+                  value: '{user}'
+                -
+                  name: password
+                  value: '{password}'
+                -
+                  name: enter
+                  value: 'Sign in'
+              variables:
+                -
+                  name: '{sid}'
+                  value: 'name="csrf-token" content="([\w]+)"'
+              required: Monitoring
+              status_codes: '200'
+            -
+              name: 'Log out'
+              url: 'http://{HOST.CONN}/zabbix//index.php'
+              query_fields:
+                -
+                  name: reconnect
+                  value: '1'
+                -
+                  name: sid
+                  value: '{sid}'
+              follow_redirects: 'NO'
+              status_codes: '200'
+      macros:
+        -
+          macro: '{$PASS.ZABBIX}'
+          value: 123qwe.123qwe.
+        -
+          macro: '{$USER.ZABBIX}'
+          value: zabbixwebtest

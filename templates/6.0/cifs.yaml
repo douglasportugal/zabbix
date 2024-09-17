@@ -1,0 +1,152 @@
+zabbix_export:
+  version: '6.0'
+  date: '2024-05-30T14:28:31Z'
+  groups:
+    - uuid: f7fcde6c3c87432dbcf2b24abf0423b8
+      name: homelab
+  templates:
+    - uuid: 28f40d76dac24c05856ce88a02930561
+      template: 'CIFS - Custom'
+      name: 'CIFS - Custom'
+      description: |
+        ############
+        ### check_cifs.sh 
+        
+        #!/bin/bash
+        
+        # Variables
+        MOUNT_POINT=$1
+        TEST_FILE="ZABBIX-TEST.txt"
+        TEST_CONTENT="write test"
+        
+        # Function to check if CIFS is mounted
+        check_mount() {
+            mount | grep " ${MOUNT_POINT} " > /dev/null
+            if [ $? -eq 0 ]; then
+                echo "The CIFS share is mounted on ${MOUNT_POINT}."
+            else
+                echo "Error: CIFS share is not mounted on ${MOUNT_POINT}."
+                exit 1
+            fi
+        }
+        
+        # Function to check mount point accessibility
+        check_access() {
+            if [ -d "${MOUNT_POINT}" ]; then
+                echo "The ${MOUNT_POINT} mount point is accessible."
+            else
+                echo "Error: Mount point ${MOUNT_POINT} is not accessible."
+                exit 1
+            fi
+        }
+        
+        # Function to test writing and reading on the share
+        check_write() {
+            cd "${MOUNT_POINT}"
+            touch "$TEST_FILE"
+            if [ $? -eq 0 ]; then
+                echo "$TEST_CONTENT" > "$TEST_FILE"
+                if [ $? -eq 0 ]; then
+                    read_content=$(cat "$TEST_FILE")
+                    if [ "$read_content" == "$TEST_CONTENT" ]; then
+                        echo "Successful write and read test on ${MOUNT_POINT}."
+                        rm "$TEST_FILE"
+                    else
+                        echo "Error: Failed to read the contents of the test file."
+                        exit 1
+                    fi
+                else
+                    echo "Error: Failed to write to test file."
+                    exit 1
+                fi
+            else
+                echo "Error: Failed to create test file at ${MOUNT_POINT}."
+                exit 1
+            fi
+        }
+        
+        # Performing the functions
+        check_mount
+        check_access
+        check_write
+        
+        echo "All validations were completed successfully."
+        
+        #############
+        ### filtered_fstab.sh
+        
+        #!/bin/bash
+        
+        grep -oP '^[^#]*\s+\K/\S*(?=\scifs)' /etc/fstab
+        
+        
+        #############
+        userparameter
+        
+        UserParameter=filtered.fstab,/opt/zabbix/scripts/filtered_fstab.sh
+        UserParameter=check.cifs[*],/opt/zabbix/scripts/check_cifs.sh $1
+      groups:
+        - name: homelab
+      items:
+        - uuid: 72e3fcb4f28349c1bc19591a432f2a54
+          name: 'CIFS: Get Mounts in Fstab'
+          key: filtered.fstab
+          trends: '0'
+          value_type: TEXT
+        - uuid: e29c82a2f94140e185f10bcc44363ef6
+          name: 'CIFS: Mounts in JSON'
+          type: DEPENDENT
+          key: mount.json
+          delay: '0'
+          trends: '0'
+          value_type: TEXT
+          preprocessing:
+            - type: STR_REPLACE
+              parameters:
+                - \040
+                - ' '
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  const lines = value.split("\n");
+                  
+                  const result = [];
+                  
+                  for (var i = 0; i < lines.length; i++) {
+                    const line = lines[i];
+                    const regex = /(^\/.*)/;
+                    const match = line.match(regex);
+                    if (match) {
+                      const mount = match[0];
+                      result.push({ Mount: mount });
+                    }
+                  }
+                  
+                  return JSON.stringify(result);
+          master_item:
+            key: filtered.fstab
+      discovery_rules:
+        - uuid: 83f5130251134f82800e3d4bd8a16c45
+          name: 'CIFS: Discovery'
+          type: DEPENDENT
+          key: discovery.cifs
+          delay: '0'
+          lifetime: 7d
+          item_prototypes:
+            - uuid: 9da0db43eb1c46d9a263bc88192d0bf3
+              name: 'CIFS: Mount {#MOUNT}'
+              key: 'check.cifs["{#MOUNT}"]'
+              delay: 3m
+              trends: '0'
+              value_type: TEXT
+              trigger_prototypes:
+                - uuid: 7911e53790cd4549b1ff856bad52e7cd
+                  expression: 'find(/CIFS - Custom/check.cifs["{#MOUNT}"],3m,"like","All validations were completed successfully.")=0'
+                  name: 'CIFS: {ITEM.VALUE}'
+                  priority: INFO
+                  manual_close: 'YES'
+          master_item:
+            key: mount.json
+          lld_macro_paths:
+            - lld_macro: '{#MOUNT}'
+              path: $.Mount

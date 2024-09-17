@@ -1,0 +1,421 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 36bff6c29af64692839d077febfc7079
+      name: 'Templates/Network devices'
+  templates:
+    - uuid: 2a98110f61474c11942ce2a94ad7d8cb
+      template: 'ec220-g5 by SNMP'
+      name: 'ec220-g5 by SNMP'
+      templates:
+        - name: 'ICMP Ping'
+      groups:
+        - name: 'Templates/Network devices'
+      items:
+        - uuid: ad8f30547e24423e9971044d9e9403cb
+          name: 'SNMP traps (fallback)'
+          type: SNMP_TRAP
+          key: snmptrap.fallback
+          delay: '0'
+          history: 7d
+          trends: '0'
+          value_type: LOG
+          description: 'The item is used to collect all SNMP traps unmatched by other snmptrap items'
+          logtimefmt: 'hh:mm:sszyyyy/MM/dd'
+          tags:
+            - tag: component
+              value: network
+        - uuid: 8feaa7f4757c4849b2e3479f82c14b96
+          name: 'System contact details'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.2.1.1.4.0]'
+          key: 'system.contact[sysContact.0]'
+          delay: 15m
+          history: 7d
+          trends: '0'
+          value_type: CHAR
+          description: |
+            MIB: SNMPv2-MIB
+            The textual identification of the contact person for this managed node, together with information on how to contact this person.  If no contact information is known, the value is the zero-length string.
+          inventory_link: CONTACT
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 12h
+          tags:
+            - tag: component
+              value: system
+        - uuid: 2d67c150c5e741f7b528a91373be30d7
+          name: 'System description'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.2.1.1.1.0]'
+          key: 'system.descr[sysDescr.0]'
+          delay: 15m
+          history: 7d
+          trends: '0'
+          value_type: CHAR
+          description: |
+            MIB: SNMPv2-MIB
+            A textual description of the entity. This value should
+            include the full name and version identification of the system's hardware type, software operating-system, and
+            networking software.
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 12h
+          tags:
+            - tag: component
+              value: system
+        - uuid: f5a4875ca5254cdd883617381abf64f6
+          name: 'System location'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.2.1.1.6.0]'
+          key: 'system.location[sysLocation.0]'
+          delay: 15m
+          history: 7d
+          trends: '0'
+          value_type: CHAR
+          description: |
+            MIB: SNMPv2-MIB
+            Physical location of the node (e.g., `equipment room`, `3rd floor`). If not provided, the value is a zero-length string.
+          inventory_link: LOCATION
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 12h
+          tags:
+            - tag: component
+              value: system
+        - uuid: 46a858dcef504dbbb40ace2d6101beee
+          name: 'System name'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.2.1.1.5.0]'
+          key: system.name
+          delay: 15m
+          history: 7d
+          trends: '0'
+          value_type: CHAR
+          description: |
+            MIB: SNMPv2-MIB
+            An administratively-assigned name for this managed node.By convention, this is the node's fully-qualified domain name.  If the name is unknown, the value is the zero-length string.
+          inventory_link: NAME
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 12h
+          tags:
+            - tag: component
+              value: system
+          triggers:
+            - uuid: 7d6319b3048848b2956fb17ede0a5b15
+              expression: 'last(/ec220-g5 by SNMP/system.name,#1)<>last(/ec220-g5 by SNMP/system.name,#2) and length(last(/ec220-g5 by SNMP/system.name))>0'
+              name: 'System name has changed'
+              event_name: 'System name has changed (new name: {ITEM.VALUE})'
+              priority: INFO
+              description: 'The name of the system has changed. Acknowledge to close the problem manually.'
+              manual_close: 'YES'
+              tags:
+                - tag: scope
+                  value: notice
+                - tag: scope
+                  value: security
+        - uuid: 8a2d593bdf164a7fa1ebc6e415f786d7
+          name: 'Uptime (network)'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.2.1.1.3.0]'
+          key: 'system.net.uptime[sysUpTime.0]'
+          delay: 30s
+          history: 7d
+          trends: '0'
+          units: uptime
+          description: |
+            MIB: SNMPv2-MIB
+            Time (in hundredths of a second) since the network management portion of the system was last re-initialized.
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '0.01'
+          tags:
+            - tag: component
+              value: system
+        - uuid: 2dcbf644baaa43f6bc7e1eab65b1fc93
+          name: 'SNMP agent availability'
+          type: INTERNAL
+          key: 'zabbix[host,snmp,available]'
+          history: 7d
+          description: |
+            Availability of SNMP checks on the host. The value of this item corresponds to availability icons in the host list.
+            Possible values:
+            0 - not available
+            1 - available
+            2 - unknown
+          tags:
+            - tag: component
+              value: health
+            - tag: component
+              value: network
+      discovery_rules:
+        - uuid: bc0e8ac314c74c7abe9e92ed28748f75
+          name: 'SNMP: Discovery Interfaces'
+          type: SNMP_AGENT
+          snmp_oid: 'walk[iso.3.6.1.2.1.2.2.1.2]'
+          key: 'walk[interface_name]'
+          delay: 1h
+          filter:
+            conditions:
+              - macro: '{#NAME}'
+                value: '{$SNMP.INTERFACE.NAME.MATCH}'
+                formulaid: A
+              - macro: '{#NAME}'
+                value: '{$SNMP.INTERFACE.NAME.DOES.NOT.MATCH}'
+                operator: NOT_MATCHES_REGEX
+                formulaid: B
+          lifetime_type: DELETE_IMMEDIATELY
+          lifetime: '0'
+          item_prototypes:
+            - uuid: 3f1de80cc56744519e62f06bda22a059
+              name: 'SNMP: Bits received on {#NAME}'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.2.1.2.2.1.10.{#SNMPINDEX}]'
+              key: 'get[bits_received,{#NAME}]'
+              trends: '0'
+              units: bps
+              valuemap:
+                name: 'Interface Type'
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+                - type: MULTIPLIER
+                  parameters:
+                    - '8'
+              tags:
+                - tag: component
+                  value: network
+                - tag: interface
+                  value: '{#NAME}'
+            - uuid: 2a4ec69143344c11b86f682199192a94
+              name: 'SNMP: Bits sent on {#NAME}'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.2.1.2.2.1.16.{#SNMPINDEX}]'
+              key: 'get[bits_sent,{#NAME}]'
+              trends: '0'
+              units: bps
+              valuemap:
+                name: 'Interface Type'
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+                - type: MULTIPLIER
+                  parameters:
+                    - '8'
+              tags:
+                - tag: component
+                  value: network
+                - tag: interface
+                  value: '{#NAME}'
+            - uuid: 1eca52752c0646cf856ff4c2230ed305
+              name: 'SNMP: Inbound packets discarded on {#NAME}'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.2.1.2.2.1.13.{#SNMPINDEX}]'
+              key: 'get[inbound_packets_discarted,{#NAME}]'
+              trends: '0'
+              valuemap:
+                name: 'Interface Type'
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+              tags:
+                - tag: component
+                  value: network
+                - tag: interface
+                  value: '{#NAME}'
+            - uuid: 66fd14313a054187969049deb20fe799
+              name: 'SNMP: Inbound packets with errors on {#NAME}'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.2.1.2.2.1.14.{#SNMPINDEX}]'
+              key: 'get[inbound_packets_with_errors,{#NAME}]'
+              trends: '0'
+              valuemap:
+                name: 'Interface Type'
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+              tags:
+                - tag: component
+                  value: network
+                - tag: interface
+                  value: '{#NAME}'
+            - uuid: ac6874142f4f47df885aa20622d167f8
+              name: 'SNMP: Interface Name {#NAME}'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.2.1.2.2.1.2.{#SNMPINDEX}]'
+              key: 'get[name,{#NAME}]'
+              trends: '0'
+              value_type: CHAR
+              tags:
+                - tag: component
+                  value: network
+                - tag: interface
+                  value: '{#NAME}'
+            - uuid: cccde28738474b45bb1a0e6baa12dab5
+              name: 'SNMP: Operational status on {#NAME}'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.2.1.2.2.1.8.{#SNMPINDEX}]'
+              key: 'get[operational_status,{#NAME}]'
+              trends: '0'
+              valuemap:
+                name: 'Operational Status'
+              tags:
+                - tag: component
+                  value: network
+                - tag: interface
+                  value: '{#NAME}'
+            - uuid: 49d5f5f389244428aa2c0589383f5e68
+              name: 'SNMP: Outbound packets discarded on {#NAME}'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.2.1.2.2.1.19.{#SNMPINDEX}]'
+              key: 'get[outbound_packets_discarted,{#NAME}]'
+              trends: '0'
+              valuemap:
+                name: 'Interface Type'
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+              tags:
+                - tag: component
+                  value: network
+                - tag: interface
+                  value: '{#NAME}'
+            - uuid: 8015b88dda7643e789c386cd927a1378
+              name: 'SNMP: Outbound packets with errors on {#NAME}'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.2.1.2.2.1.20.{#SNMPINDEX}]'
+              key: 'get[outbound_packets_with_errors,{#NAME}]'
+              trends: '0'
+              valuemap:
+                name: 'Interface Type'
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+              tags:
+                - tag: component
+                  value: network
+                - tag: interface
+                  value: '{#NAME}'
+            - uuid: 354ff67430e94b06bf21595a1b3acf56
+              name: 'SNMP: Speed on {#NAME}'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.2.1.2.2.1.5.{#SNMPINDEX}]'
+              key: 'get[speed,{#NAME}]'
+              trends: '0'
+              units: bps
+              tags:
+                - tag: component
+                  value: network
+                - tag: interface
+                  value: '{#NAME}'
+            - uuid: 64798b408f0f4fcdac2191259e055097
+              name: 'SNMP: Interface Type {#NAME}'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.2.1.2.2.1.3.{#SNMPINDEX}]'
+              key: 'get[type,{#NAME}]'
+              trends: '0'
+              value_type: CHAR
+              valuemap:
+                name: 'Interface Type'
+              tags:
+                - tag: component
+                  value: network
+                - tag: interface
+                  value: '{#NAME}'
+          lld_macro_paths:
+            - lld_macro: '{#NAME}'
+              path: $.NAME
+          preprocessing:
+            - type: SNMP_WALK_TO_JSON
+              parameters:
+                - NAME
+                - iso.3.6.1.2.1.2.2.1.2
+                - '1'
+      macros:
+        - macro: '{$SNMP.INTERFACE.NAME.DOES.NOT.MATCH}'
+          value: '(^Software Loopback Interface|^NULL[0-9.]*$|^[Ll]o[0-9.]*$|^[Ss]ystem$|^Nu[0-9.]*$|^veth[0-9a-z]+$|docker[0-9]+|br-[a-z0-9]{12}|apcli.*|ifb[0-9]|ip6tnl|ra[0-9]|sit.*)'
+        - macro: '{$SNMP.INTERFACE.NAME.MATCH}'
+          value: '.*'
+      valuemaps:
+        - uuid: c35bd36c5e3b432aa67413e165a4eb0c
+          name: 'Interface Type'
+          mappings:
+            - value: '1'
+              newvalue: other
+            - value: '2'
+              newvalue: regular1822
+            - value: '3'
+              newvalue: hdh1822
+            - value: '4'
+              newvalue: ddnX25
+            - value: '5'
+              newvalue: rfc877x25
+            - value: '6'
+              newvalue: ethernetCsmacd
+            - value: '7'
+              newvalue: iso88023Csmacd
+            - value: '8'
+              newvalue: iso88024TokenBus
+            - value: '9'
+              newvalue: iso88025TokenRing
+            - value: '10'
+              newvalue: iso88026Man
+            - value: '11'
+              newvalue: starLan
+            - value: '12'
+              newvalue: proteon10Mbit
+            - value: '13'
+              newvalue: proteon80Mbit
+            - value: '14'
+              newvalue: hyperchannel
+            - value: '15'
+              newvalue: fddi
+            - value: '16'
+              newvalue: lapb
+            - value: '17'
+              newvalue: sdlc
+            - value: '18'
+              newvalue: ds1
+            - value: '19'
+              newvalue: e1
+            - value: '20'
+              newvalue: basicISDN
+            - value: '21'
+              newvalue: primaryISDN
+            - value: '22'
+              newvalue: propPointToPointSerial
+            - value: '23'
+              newvalue: ppp
+            - value: '24'
+              newvalue: softwareLoopback
+            - value: '25'
+              newvalue: eon
+            - value: '26'
+              newvalue: ethernet3Mbit
+        - uuid: df52351972ac41cfbc2548747faf9786
+          name: 'Operational Status'
+          mappings:
+            - value: '1'
+              newvalue: up
+            - value: '2'
+              newvalue: down
+            - value: '4'
+              newvalue: unknown
+            - value: '5'
+              newvalue: dormant
+            - value: '6'
+              newvalue: notPresent
+            - value: '7'
+              newvalue: lowerLayerDown
