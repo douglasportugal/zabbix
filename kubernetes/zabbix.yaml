@@ -348,9 +348,9 @@ spec:
         - name: ZBX_CACHESIZE
           value: "2G"
         - name: ZBX_HISTORYCACHESIZE
-          value: "512M"
+          value: "1G"
         - name: ZBX_INDEXCACHESIZE
-          value: "128M"
+          value: "256M"
         - name: ZBX_HOUSEKEEPINGFREQUENCY
           value: "1"
         startupProbe:
