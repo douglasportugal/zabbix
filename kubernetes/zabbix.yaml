@@ -414,7 +414,7 @@ spec:
           - name: ZBX_PROXYMODE
             value: "1"
           - name: ZBX_SERVER_HOST
-            value: "10.233.0.0/16"
+            value: "192.168.0.82,192.168.0.83"
           - name: ZBX_SERVER_PORT
             value: ""
           - name: ZBX_HOSTNAME

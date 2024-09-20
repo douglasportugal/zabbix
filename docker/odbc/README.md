@@ -1,1 +1,1 @@
-Dockerfile para customizar a imagem, configurando drivers odbc, MSSQL,Oracle,DB2 na imagem oficial do zabbix/zabbix-proxy-sqlite3 da zabbix
+Dockerfile para adicionar a imagem oficial da zabbix "zabbix/zabbix-proxy-sqlite3", drivers odbc, Oracle, MySQL, PostgreSQL, MSSQL.
