@@ -1,10 +1,9 @@
-FROM zabbix/zabbix-proxy-mysql:ol-6.0.29
+FROM zabbix/zabbix-proxy-sqlite3:ol-7.0.3
 
 USER root
 
-COPY odbc.sh /root
+COPY odbc.sh ibm_data_server_driver_for_odbc_cli.tar.gz ./
 # COPY db2.sh /root
-COPY ibm_data_server_driver_for_odbc_cli.tar.gz /root
-RUN bash /root/odbc.sh
+RUN bash ./odbc.sh
+# RUN bash /root/db2.sh
 COPY odbcinst.ini /etc/
-# COPY odbc.ini /etc/

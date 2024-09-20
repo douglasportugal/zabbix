@@ -1,3 +1,5 @@
+# Only example for DB2 ODBC
+
 # # Extract 
 # tar -zxvf ibm_data_server_driver_for_odbc_cli.tar.gz -C /etc/zabbix/
 

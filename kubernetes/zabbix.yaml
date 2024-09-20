@@ -229,11 +229,11 @@ spec:
           failureThreshold: 5
         resources:
           requests:
+            cpu: "250m"
+            memory: "256Mi"
+          limits:
             cpu: "500m"
             memory: "512Mi"
-          limits:
-            cpu: "1"
-            memory: "1Gi"
         env:
         - name: ZBX_SERVER_NAME
           value: "Homelab in k8s"
@@ -306,13 +306,13 @@ spec:
             port: zabbix-trapper
           initialDelaySeconds: 15
           periodSeconds: 20
-        # resources:
-        #   requests:
-        #     cpu: "500m"
-        #     memory: "512Mi"
-        #   limits:
-        #     cpu: "1"
-        #     memory: "1Gi"
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
         env:
         - name: POSTGRES_USER
           valueFrom:
@@ -391,7 +391,7 @@ spec:
           emptyDir: {}
       containers:
         - name: zabbix-proxy-sqlite3
-          image: zabbix/zabbix-proxy-sqlite3:ol-7.0.3
+          image: douglasportugal/zbx-prx-sqlite3:ol-7.0.3
           imagePullPolicy: IfNotPresent
           ports:
           - containerPort: 10051
