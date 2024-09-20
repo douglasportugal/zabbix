@@ -1,0 +1,53 @@
+pipeline {
+    agent any
+    
+    environment {
+        // Nome da imagem e repositório Docker Hub
+        DOCKER_IMAGE = 'douglasportugal/zbx-prx-sqlite3'
+        // Defina o nome do branch ou tag do repositório Git que deseja baixar
+        GIT_REPO = 'https://github.com/douglasportugal/zabbix.git'
+        // Credenciais do Docker Hub salvas no Jenkins
+        DOCKER_CREDENTIALS = 'dockerhub-credentials-id'
+    }
+
+    stages {
+        stage('Clonar Repositório') {
+            steps {
+                // Clonar o repositório Git
+                git branch: 'main', url: "${env.GIT_REPO}"
+            }
+        }
+        
+        stage('Construir Imagem Docker') {
+            steps {
+                script {
+                    dockerapp = docker.build("${DOCKER_IMAGE}:${env.BUILD_ID}", '-f docker/odbc/Dockerfile docker/odbc/')
+                }
+            }
+        }
+        
+        stage('Fazer Push para o Docker Hub') {
+            steps {
+                script {
+                    // Login no Docker Hub usando as credenciais armazenadas no Jenkins
+                    withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDENTIALS, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh """
+                            echo ${DOCKER_PASS} | docker login -u ${DOCKER_USER} --password-stdin
+                            docker tag ${DOCKER_IMAGE}:${env.BUILD_ID} ${DOCKER_IMAGE}:latest
+                            docker push ${DOCKER_IMAGE}:latest
+                        """
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline executado com sucesso!'
+        }
+        failure {
+            echo 'Pipeline falhou.'
+        }
+    }
+}
