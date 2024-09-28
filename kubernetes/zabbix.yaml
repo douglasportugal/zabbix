@@ -200,7 +200,7 @@ spec:
             tier: zabbix-web
       containers:
       - name: zabbix-web
-        image: zabbix/zabbix-web-nginx-pgsql:ol-7.0.3
+        image: zabbix/zabbix-web-nginx-pgsql:ol-7.0.4
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
@@ -290,7 +290,7 @@ spec:
     spec:
       containers:
       - name: zabbix-server
-        image: zabbix/zabbix-server-pgsql:ol-7.0.3
+        image: zabbix/zabbix-server-pgsql:ol-7.0.4
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 10051
@@ -548,7 +548,7 @@ spec:
     spec:
       containers:
         - name: zabbix-web-service
-          image: zabbix/zabbix-web-service:ol-7.0.3
+          image: zabbix/zabbix-web-service:ol-7.0.4
           imagePullPolicy: IfNotPresent
           resources:
            limits:
@@ -611,7 +611,7 @@ spec:
     spec:
       containers:
         - name: zabbix-java-gateway
-          image: zabbix/zabbix-java-gateway:ol-7.0.3
+          image: zabbix/zabbix-java-gateway:ol-7.0.4
           imagePullPolicy: IfNotPresent
           ports:
           - containerPort: 10052
@@ -669,7 +669,7 @@ spec:
 #        kubernetes.io/os: linux
 #       containers:
 #         - name: zabbix-agent
-#           image: zabbix/zabbix-agent:ol-7.0.3
+#           image: zabbix/zabbix-agent:ol-7.0.4
 #           imagePullPolicy: IfNotPresent
 #           resources:
 #            limits:
