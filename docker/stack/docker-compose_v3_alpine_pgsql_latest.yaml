@@ -57,46 +57,6 @@ services:
       com.zabbix.dbtype: "pgsql"
       com.zabbix.os: "Alpine"
 
-  zabbix-proxy-sqlite3:
-    image: "douglasportugal/zbx-prx-sqlite3:latest"
-    init: true
-    ports:
-      - "10061:10051"
-    deploy:
-      restart_policy:
-        condition: on-failure
-    environment:
-      - ZBX_HOSTNAME=zbx-prx-sqlite3
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - proxy-data:/usr/lib/zabbix/externalscripts:ro
-      - proxy-data:/var/lib/zabbix/modules:ro
-      - proxy-data:/var/lib/zabbix/enc:ro
-      - proxy-data:/var/lib/zabbix/ssh_keys:ro
-      - proxy-data:/var/lib/zabbix/mibs:ro
-    tmpfs: /tmp
-    ulimits:
-      nproc: 65535
-      nofile:
-        soft: 20000
-        hard: 40000
-    networks:
-      backend:
-        aliases:
-          - zabbix-proxy-sqlite3
-    stop_grace_period: 30s
-    sysctls:
-      - net.ipv4.ip_local_port_range=1024 64999
-      - net.ipv4.conf.all.accept_redirects=0
-      - net.ipv4.conf.all.secure_redirects=0
-      - net.ipv4.conf.all.send_redirects=0
-    labels:
-      com.zabbix.company: "Zabbix LLC"
-      com.zabbix.component: "zabbix-proxy"
-      com.zabbix.os: "Oracle Linux"
-      com.zabbix.description: "Zabbix proxy with SQLite3 database support"
-      com.zabbix.dbtype: "sqlite3"
-
   zabbix-web-nginx-pgsql:
     image: "zabbix/zabbix-web-nginx-pgsql:alpine-7.0.4"
     ports:
@@ -141,43 +101,6 @@ services:
     depends_on:
       - postgres-server
 
-  zabbix-agent2:
-    image: "zabbix/zabbix-agent2:alpine-7.0.4"
-    init: true
-    ports:
-      - "10050:10050"
-    deploy:
-      mode: global  # Define o modo como global
-      restart_policy:
-        condition: on-failure
-    healthcheck:
-      test: ["CMD-SHELL", "ps -ef | grep '/usr/sbin/zabbix_agent2 --foreground -c /etc/zabbix/zabbix_agent2.conf'"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - agent2-data:/etc/zabbix/zabbix_agentd.d:ro
-      - agent2-data:/var/lib/zabbix/modules:ro
-      - agent2-data:/var/lib/zabbix/enc:ro
-      - agent2-data:/var/lib/zabbix/ssh_keys:ro
-    tmpfs: /tmp
-    environment:
-      - ZBX_TIMEOUT=10
-      - ZBX_SERVER_HOST=zabbix-server
-    networks:
-      backend:
-        aliases:
-          - zabbix-agent
-          - zabbix-agent-passive
-    stop_grace_period: 5s
-    labels:
-      com.zabbix.description: "Zabbix agent 2"
-      com.zabbix.company: "Zabbix LLC"
-      com.zabbix.component: "zabbix-agent2"
-      com.zabbix.os: "Alpine"
-
   postgres-server:
     image: "postgres:16"
     deploy:
@@ -206,14 +129,17 @@ networks:
     driver: overlay
     ipam:
       config:
-        - subnet: 192.168.0.0/24
+        - subnet: 192.168.1.0/24
   database:
     driver: overlay
     ipam:
       config:
-        - subnet: 192.168.1.0/24
+        - subnet: 192.168.2.0/24
   frontend:
     driver: overlay
+    ipam:
+      config:
+        - subnet: 192.168.0.0/24
 
 volumes:
   server-data:
@@ -222,23 +148,11 @@ volumes:
       o: "addr=192.168.0.200,nolock"
       device: ":/storage/dockerswarm/zabbix/server-data"
 
-  proxy-data:
-    driver_opts:
-      type: "nfs"
-      o: "addr=192.168.0.200,nolock"
-      device: ":/storage/dockerswarm/zabbix/proxy-data"
-
   web-data:
     driver_opts:
       type: "nfs"
       o: "addr=192.168.0.200,nolock"
       device: ":/storage/dockerswarm/zabbix/web-data"
-
-  agent2-data:
-    driver_opts:
-      type: "nfs"
-      o: "addr=192.168.0.200,nolock"
-      device: ":/storage/dockerswarm/zabbix/agent2-data"
 
   postgres-data:
     driver_opts:
