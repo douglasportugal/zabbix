@@ -1,7 +1,6 @@
 Foi utilizado o código https://github.com/zabbix/zabbix-docker e adaptado para meu homelab e necessidades.
 
-Versão 7.0.3 Alpine com posgresql
+Versão 7.0.4 Alpine com posgresql com imagem customizada do zabbix-proxy que se encontra https://hub.docker.com/u/douglasportugal
 
-Para Zabbix server coletar dados basta configurar com o nome do service do agent
+Está em docker-swarm com ponto de montagem NFS
 
-no repo https://hub.docker.com/u/douglasportugal tenho imagem do zabbix-proxy-sqlite3 com drivers ODBC na versão do zabbix 6.0.29

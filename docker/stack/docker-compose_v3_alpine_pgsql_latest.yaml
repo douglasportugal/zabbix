@@ -1,138 +1,247 @@
+version: '3.8'
+
 services:
- zabbix-server:
-  extends:
-   file: compose_zabbix_components.yaml
-   service: server-pgsql
-  image: "${ZABBIX_SERVER_PGSQL_IMAGE}:${ZABBIX_ALPINE_IMAGE_TAG}${ZABBIX_IMAGE_TAG_POSTFIX}"
-  volumes:
-   - /etc/timezone:/etc/timezone:ro
-  depends_on:
-   - postgres-server
-  labels:
-   com.zabbix.os: "${ALPINE_OS_TAG}"
+  zabbix-server:
+    image: "zabbix/zabbix-server-pgsql:alpine-7.0.4"
+    init: true
+    ports:
+      - "10051:10051"
+    deploy:
+      restart_policy:
+        condition: on-failure
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - server-data:/usr/lib/zabbix/alertscripts:ro
+      - server-data:/usr/lib/zabbix/externalscripts:ro
+      - server-data:/var/lib/zabbix/dbscripts:ro
+      - server-data:/var/lib/zabbix/export:rw
+      - server-data:/var/lib/zabbix/modules:ro
+      - server-data:/var/lib/zabbix/enc:ro
+      - server-data:/var/lib/zabbix/ssh_keys:ro
+      - server-data:/var/lib/zabbix/mibs:ro
+    tmpfs: /tmp
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 20000
+        hard: 40000
+    healthcheck:
+      test: ["CMD-SHELL", "ps -ef | grep '/usr/sbin/zabbix_server --foreground -c /etc/zabbix/zabbix_server.conf'"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    environment:
+      - POSTGRES_USER=zabbix
+      - POSTGRES_PASSWORD=zabbix
+      - POSTGRES_DB=zabbix
+    networks:
+      backend:
+        aliases:
+          - zabbix-server
+      database:
+        aliases:
+          - zabbix-server
+    stop_grace_period: 30s
+    sysctls:
+      - net.ipv4.ip_local_port_range=1024 64999
+      - net.ipv4.conf.all.accept_redirects=0
+      - net.ipv4.conf.all.secure_redirects=0
+      - net.ipv4.conf.all.send_redirects=0
+    depends_on:
+      - postgres-server
+    labels:
+      com.zabbix.company: "Zabbix LLC"
+      com.zabbix.component: "zabbix-server"
+      com.zabbix.description: "Zabbix server with PostgreSQL database support"
+      com.zabbix.dbtype: "pgsql"
+      com.zabbix.os: "Alpine"
 
- zabbix-proxy-sqlite3:
-  extends:
-   file: compose_zabbix_components.yaml
-   service: proxy-sqlite3
-  image: "${ZABBIX_PROXY_SQLITE3_IMAGE}:${ZABBIX_ALPINE_IMAGE_TAG}${ZABBIX_IMAGE_TAG_POSTFIX}"
-  volumes:
-   - /etc/timezone:/etc/timezone:ro
-  labels:
-   com.zabbix.os: "${ALPINE_OS_TAG}"
+  zabbix-proxy-sqlite3:
+    image: "douglasportugal/zbx-prx-sqlite3:latest"
+    init: true
+    ports:
+      - "10061:10051"
+    deploy:
+      restart_policy:
+        condition: on-failure
+    environment:
+      - ZBX_HOSTNAME=zbx-prx-sqlite3
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - proxy-data:/usr/lib/zabbix/externalscripts:ro
+      - proxy-data:/var/lib/zabbix/modules:ro
+      - proxy-data:/var/lib/zabbix/enc:ro
+      - proxy-data:/var/lib/zabbix/ssh_keys:ro
+      - proxy-data:/var/lib/zabbix/mibs:ro
+    tmpfs: /tmp
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 20000
+        hard: 40000
+    networks:
+      backend:
+        aliases:
+          - zabbix-proxy-sqlite3
+    stop_grace_period: 30s
+    sysctls:
+      - net.ipv4.ip_local_port_range=1024 64999
+      - net.ipv4.conf.all.accept_redirects=0
+      - net.ipv4.conf.all.secure_redirects=0
+      - net.ipv4.conf.all.send_redirects=0
+    labels:
+      com.zabbix.company: "Zabbix LLC"
+      com.zabbix.component: "zabbix-proxy"
+      com.zabbix.os: "Oracle Linux"
+      com.zabbix.description: "Zabbix proxy with SQLite3 database support"
+      com.zabbix.dbtype: "sqlite3"
 
- zabbix-web-nginx-pgsql:
-  extends:
-   file: compose_zabbix_components.yaml
-   service: web-nginx-pgsql
-  image: "${ZABBIX_WEB_NGINX_PGSQL_IMAGE}:${ZABBIX_ALPINE_IMAGE_TAG}${ZABBIX_IMAGE_TAG_POSTFIX}"
-  volumes:
-   - /etc/timezone:/etc/timezone:ro
-  depends_on:
-   - postgres-server
-  labels:
-   com.zabbix.os: "${ALPINE_OS_TAG}"
+  zabbix-web-nginx-pgsql:
+    image: "zabbix/zabbix-web-nginx-pgsql:alpine-7.0.4"
+    ports:
+      - "80:8080"
+      - "443:8443"
+    deploy:
+      restart_policy:
+        condition: on-failure
+    environment:
+      - POSTGRES_USER=zabbix
+      - POSTGRES_PASSWORD=zabbix
+      - POSTGRES_DB=zabbix
+      - ZBX_SERVER_HOST=zabbix-server
+      - ZBX_SERVER_NAME=Composed installation
+      - ZBX_ALLOWEDIP=zabbix-server
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - web-data:/etc/ssl/nginx:ro
+      - web-data:/usr/share/zabbix/modules:ro
+    tmpfs: /tmp
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      backend:
+        aliases:
+          - zabbix-web-nginx-pgsql
+      database:
+    stop_grace_period: 10s
+    sysctls:
+      - net.core.somaxconn=65535
+    labels:
+      com.zabbix.company: "Zabbix LLC"
+      com.zabbix.component: "zabbix-frontend"
+      com.zabbix.webserver: "nginx"
+      com.zabbix.description: "Zabbix frontend on Nginx web-server with PostgreSQL database support"
+      com.zabbix.dbtype: "pgsql"
+      com.zabbix.os: "Alpine"
+    depends_on:
+      - postgres-server
 
- zabbix-agent:
-  extends:
-   file: compose_zabbix_components.yaml
-   service: agent2
-  image: "${ZABBIX_AGENT2_IMAGE}:${ZABBIX_ALPINE_IMAGE_TAG}${ZABBIX_IMAGE_TAG_POSTFIX}"
-  volumes:
-   - /etc/timezone:/etc/timezone:ro
-  labels:
-   com.zabbix.os: "${ALPINE_OS_TAG}"
+  zabbix-agent2:
+    image: "zabbix/zabbix-agent2:alpine-7.0.4"
+    init: true
+    ports:
+      - "10050:10050"
+    deploy:
+      mode: global  # Define o modo como global
+      restart_policy:
+        condition: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "ps -ef | grep '/usr/sbin/zabbix_agent2 --foreground -c /etc/zabbix/zabbix_agent2.conf'"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - agent2-data:/etc/zabbix/zabbix_agentd.d:ro
+      - agent2-data:/var/lib/zabbix/modules:ro
+      - agent2-data:/var/lib/zabbix/enc:ro
+      - agent2-data:/var/lib/zabbix/ssh_keys:ro
+    tmpfs: /tmp
+    environment:
+      - ZBX_TIMEOUT=10
+      - ZBX_SERVER_HOST=zabbix-server
+    networks:
+      backend:
+        aliases:
+          - zabbix-agent
+          - zabbix-agent-passive
+    stop_grace_period: 5s
+    labels:
+      com.zabbix.description: "Zabbix agent 2"
+      com.zabbix.company: "Zabbix LLC"
+      com.zabbix.component: "zabbix-agent2"
+      com.zabbix.os: "Alpine"
 
- zabbix-java-gateway:
-  extends:
-   file: compose_zabbix_components.yaml
-   service: java-gateway
-  image: "${ZABBIX_JAVA_GATEWAY_IMAGE}:${ZABBIX_ALPINE_IMAGE_TAG}${ZABBIX_IMAGE_TAG_POSTFIX}"
-  labels:
-   com.zabbix.os: "${ALPINE_OS_TAG}"
-
- zabbix-snmptraps:
-  extends:
-   file: compose_zabbix_components.yaml
-   service: snmptraps
-  image: "${ZABBIX_SNMPTRAPS_IMAGE}:${ZABBIX_ALPINE_IMAGE_TAG}${ZABBIX_IMAGE_TAG_POSTFIX}"
-  labels:
-   com.zabbix.os: "${ALPINE_OS_TAG}"
-
- zabbix-web-service:
-  extends:
-   file: compose_zabbix_components.yaml
-   service: web-service
-  image: "${ZABBIX_WEB_SERVICE_IMAGE}:${ZABBIX_ALPINE_IMAGE_TAG}${ZABBIX_IMAGE_TAG_POSTFIX}"
-  labels:
-   com.zabbix.os: "${ALPINE_OS_TAG}"
-
- postgres-server:
-  extends:
-   file: compose_databases.yaml
-   service: postgres-server
-
- db-data-pgsql:
-  extends:
-   file: compose_databases.yaml
-   service: db-data-pgsql
-
- elasticsearch:
-  extends:
-   file: compose_databases.yaml
-   service: elasticsearch
-
- selenium:
-  extends:
-   file: compose_additional_components.yaml
-   service: selenium
-
- selenium-chrome:
-  platform: linux/amd64
-  extends:
-   file: compose_additional_components.yaml
-   service: selenium-chrome
+  postgres-server:
+    image: "postgres:16"
+    deploy:
+      restart_policy:
+        condition: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zabbix -d zabbix"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    volumes:
+      - postgres-data:/var/lib/postgresql/data:rw
+    environment:
+      - POSTGRES_USER=zabbix
+      - POSTGRES_PASSWORD=zabbix
+      - POSTGRES_DB=zabbix
+    stop_grace_period: 1m
+    networks:
+      database:
+        aliases:
+          - postgres-server
 
 networks:
-  frontend:
-    driver: bridge
-    driver_opts:
-      com.docker.network.enable_ipv6: "${FRONTEND_ENABLE_IPV6}"
-    ipam:
-      driver: "${FRONTEND_NETWORK_DRIVER}"
-      config:
-      - subnet: "${FRONTEND_SUBNET}"
   backend:
-    driver: bridge
-    driver_opts:
-      com.docker.network.enable_ipv6: "${BACKEND_ENABLE_IPV6}"
-    internal: true
+    driver: overlay
     ipam:
-      driver: "${BACKEND_NETWORK_DRIVER}"
       config:
-      - subnet: "${BACKEND_SUBNET}"
+        - subnet: 192.168.0.0/24
   database:
-    driver: bridge
-    driver_opts:
-      com.docker.network.enable_ipv6: "${DATABASE_NETWORK_ENABLE_IPV6}"
-    internal: true
+    driver: overlay
     ipam:
-      driver: "${DATABASE_NETWORK_DRIVER}"
-  tools_frontend:
-    driver: bridge
-    driver_opts:
-      com.docker.network.enable_ipv6: "${ADD_TOOLS_ENABLE_IPV6}"
-    ipam:
-      driver: "${ADD_TOOLS_NETWORK_DRIVER}"
       config:
-      - subnet: "${ADD_TOOLS_SUBNET}"
+        - subnet: 192.168.1.0/24
+  frontend:
+    driver: overlay
 
 volumes:
-  snmptraps:
-#  dbsocket:
+  server-data:
+    driver_opts:
+      type: "nfs"
+      o: "addr=192.168.0.200,nolock"
+      device: ":/storage/dockerswarm/zabbix/server-data"
 
-secrets:
-  POSTGRES_USER:
-    file: ${ENV_VARS_DIRECTORY}/.POSTGRES_USER
-  POSTGRES_PASSWORD:
-    file: ${ENV_VARS_DIRECTORY}/.POSTGRES_PASSWORD
+  proxy-data:
+    driver_opts:
+      type: "nfs"
+      o: "addr=192.168.0.200,nolock"
+      device: ":/storage/dockerswarm/zabbix/proxy-data"
+
+  web-data:
+    driver_opts:
+      type: "nfs"
+      o: "addr=192.168.0.200,nolock"
+      device: ":/storage/dockerswarm/zabbix/web-data"
+
+  agent2-data:
+    driver_opts:
+      type: "nfs"
+      o: "addr=192.168.0.200,nolock"
+      device: ":/storage/dockerswarm/zabbix/agent2-data"
+
+  postgres-data:
+    driver_opts:
+      type: "nfs"
+      o: "addr=192.168.0.200,nolock"
+      device: ":/storage/dockerswarm/zabbix/postgres-data"
