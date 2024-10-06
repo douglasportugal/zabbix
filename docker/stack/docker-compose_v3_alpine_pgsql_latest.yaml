@@ -71,7 +71,6 @@ services:
       - POSTGRES_DB=zabbix
       - ZBX_SERVER_HOST=zabbix-server
       - ZBX_SERVER_NAME=Composed installation
-      - ZBX_ALLOWEDIP=zabbix-server
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - web-data:/etc/ssl/nginx:ro
