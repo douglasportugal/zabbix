@@ -1,0 +1,129 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: ee1dbf2457604d038c683b13e988d26c
+      name: homelab
+  templates:
+    - uuid: 40ca49808a314f49b0cbb9707179a327
+      template: 'Linux by prometheus - Custom'
+      name: 'Linux by prometheus - Custom'
+      groups:
+        - name: homelab
+      items:
+        - uuid: fc155fc424604855b65295a93e045f6d
+          name: 'Boot time'
+          type: DEPENDENT
+          key: boot.time
+          delay: '0'
+          value_type: TEXT
+          trends: '0'
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - node_boot_time_seconds
+                - value
+                - ''
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  var date = new Date(value * 1000); // Multiplica por 1000 para converter de segundos para milissegundos
+                  var formattedDate = date.toISOString().slice(0, 19).replace("T", " ");
+                  return formattedDate;
+          master_item:
+            key: node_exporter.get
+        - uuid: c4d8fe908035431598dd15ed64e96825
+          name: 'Get node_exporter metrics'
+          type: HTTP_AGENT
+          key: node_exporter.get
+          history: 1h
+          value_type: TEXT
+          trends: '0'
+          authtype: BASIC
+          username: '{$NODE_EXPORTER_USER}'
+          password: '{$NODE_EXPORTER_PASS}'
+          url: 'http://{$NODE_EXPORTER_HOST}:{$NODE_EXPORTER_PORT}/metrics'
+          tags:
+            - tag: component
+              value: raw
+      discovery_rules:
+        - uuid: e41b5daf7393465485b18af30acfb603
+          name: arp_entries
+          type: DEPENDENT
+          key: discovery.arp_entries
+          delay: '0'
+          item_prototypes:
+            - uuid: 60c172adc39d4ea189dbc71a55f95264
+              name: 'Number of ARP entries for {#ARP_ENTRIES}'
+              type: DEPENDENT
+              key: 'number.arp_entries[{#ARP_ENTRIES}]'
+              delay: '0'
+              value_type: FLOAT
+              preprocessing:
+                - type: PROMETHEUS_PATTERN
+                  parameters:
+                    - 'node_arp_entries{device="{#ARP_ENTRIES}"}'
+                    - value
+                    - ''
+              master_item:
+                key: node_exporter.get
+          master_item:
+            key: node_exporter.get
+          lld_macro_paths:
+            - lld_macro: '{#ARP_ENTRIES}'
+              path: $.labels.device
+            - lld_macro: '{#HELP}'
+              path: $.help
+          preprocessing:
+            - type: PROMETHEUS_TO_JSON
+              parameters:
+                - 'node_arp_entries{device=~".+"}'
+        - uuid: 4fbd0a6be8854b19aa2d8cb2b61ddafc
+          name: cooling_device_cur_state
+          type: DEPENDENT
+          key: discovery.cooling_device_cur_state
+          delay: '0'
+          item_prototypes:
+            - uuid: 75e98a2b0add44389bbb4e7c6fad5562
+              name: 'Current throttle state of the cooling device {#NAME} {#TYPE}'
+              type: DEPENDENT
+              key: 'cooling_device_cur_state[{#NAME},{#TYPE}]'
+              delay: '0'
+              preprocessing:
+                - type: PROMETHEUS_PATTERN
+                  parameters:
+                    - 'node_cooling_device_cur_state{name="{#NAME}",type="{#TYPE}"}'
+                    - value
+                    - ''
+              master_item:
+                key: node_exporter.get
+          master_item:
+            key: node_exporter.get
+          lld_macro_paths:
+            - lld_macro: '{#HELP}'
+              path: $.help
+            - lld_macro: '{#NAME}'
+              path: $.name
+            - lld_macro: '{#TYPE}'
+              path: $.type
+          preprocessing:
+            - type: PROMETHEUS_TO_JSON
+              parameters:
+                - '{__name__=~"^node_cooling_device_cur_state",name=~".+"}'
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  var coolings = JSON.parse(value);
+                  
+                  result = coolings.map(function (cooling) {
+                  	return {
+                  		'name': cooling.labels.name,
+                  		'type': cooling.labels.type,
+                  	};
+                  });
+                  
+                  return JSON.stringify(result);
+      macros:
+        - macro: '{$NODE_EXPORTER_HOST}'
+        - macro: '{$NODE_EXPORTER_PASS}'
+        - macro: '{$NODE_EXPORTER_PORT}'
+        - macro: '{$NODE_EXPORTER_USER}'
