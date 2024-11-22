@@ -1,5 +1,5 @@
 cd ./ && \
-microdnf install -y openssl tar gzip libaio unixODBC unixODBC-devel mariadb-connector-odbc postgresql-odbc && \
+microdnf install -y openssl tar gzip libaio unixODBC mariadb-connector-odbc postgresql-odbc && \
 rpm -Uvh https://packages.microsoft.com/rhel/9.0/prod/Packages/m/msodbcsql17-17.10.6.1-1.x86_64.rpm && \
 rpm -Uvh https://packages.microsoft.com/rhel/9.0/prod/Packages/m/msodbcsql18-18.4.1.1-1.x86_64.rpm && \
 rpm -Uvh https://download.oracle.com/otn_software/linux/instantclient/2350000/oracle-instantclient-basic-23.5.0.24.07-1.el9.x86_64.rpm && \
