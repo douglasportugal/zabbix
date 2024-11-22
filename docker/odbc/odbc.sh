@@ -16,7 +16,7 @@ sed -i '1s/^/openssl_conf = default_conf\n/' /etc/ssl/openssl.cnf &&
     echo "" >> /etc/ssl/openssl.cnf && \
     echo "[system_default_sect]" >> /etc/ssl/openssl.cnf && \
     echo "MinProtocol = TLSv1" >> /etc/ssl/openssl.cnf && \
-    echo "CipherString = DEFAULT:@SECLEVEL=1" >> /etc/ssl/openssl.cnf
+    echo "CipherString = DEFAULT:@SECLEVEL=0" >> /etc/ssl/openssl.cnf
 && \
 sed -i "s/TLS.MinProtocol = TLSv1.2/TLS.MinProtocol = TLSv1.0/" /etc/crypto-policies/back-ends/opensslcnf.config
 microdnf clean all
