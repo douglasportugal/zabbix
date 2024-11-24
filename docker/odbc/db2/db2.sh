@@ -6,7 +6,7 @@
 # # Remove tar.gz
 # rm -f ibm_data_server_driver_for_odbc_cli.tar.gz
 
-# Enter to zabbix folder DB@ extract
+# Enter to zabbix folder DB2 extract
 # cd /etc/zabbix/clidriver/cfg
 
 # # Copy db2cli.ini.sample
