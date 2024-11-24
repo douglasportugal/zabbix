@@ -8,10 +8,10 @@ RUN cd ./ && \
 curl https://packages.microsoft.com/config/rhel/9/prod.repo | tee /etc/yum.repos.d/mssql-release.repo && \
 # ACCEPT_EULA=Y microdnf install -y tar gzip openssl libaio unixODBC-devel msodbcsql17 msodbcsql18 mariadb-connector-odbc postgresql-odbc && \
 microdnf install -y wget tar gzip openssl libaio unixODBC-devel mariadb-connector-odbc postgresql-odbc && \
-wget https://packages.microsoft.com/rhel/9/prod/Packages/m/ && \
+wget https://packages.microsoft.com/rhel/9/prod/Packages/m/msodbcsql17-17.10.6.1-1.x86_64.rpm && \
 wget https://packages.microsoft.com/rhel/9/prod/Packages/m/msodbcsql18-18.4.1.1-1.x86_64.rpm && \
-ACCEPT_EULA=Y rpm -i msodbcsql17-17.10.6.1-1.x86_64.rpm && \
-ACCEPT_EULA=Y rpm -i msodbcsql18-18.4.1.1-1.x86_64.rpm && \
+ACCEPT_EULA=Y microdnf install -y msodbcsql17-17.10.6.1-1.x86_64.rpm && \
+ACCEPT_EULA=Y microdnf install -y msodbcsql18-18.4.1.1-1.x86_64.rpm && \
 rpm -Uvh https://download.oracle.com/otn_software/linux/instantclient/2350000/oracle-instantclient-basic-23.5.0.24.07-1.el9.x86_64.rpm && \
 rpm -Uvh https://download.oracle.com/otn_software/linux/instantclient/2350000/oracle-instantclient-sqlplus-23.5.0.24.07-1.el9.x86_64.rpm && \
 rpm -Uvh https://download.oracle.com/otn_software/linux/instantclient/2350000/oracle-instantclient-odbc-23.5.0.24.07-1.el9.x86_64.rpm && \
