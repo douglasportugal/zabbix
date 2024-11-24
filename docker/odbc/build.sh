@@ -1,7 +1,8 @@
 #!/bin/bash
 
 DCKPATH=/home/douglas/Documents/git/zabbix/docker/odbc
-IMAGETAG=douglasportugal/zbx-prx-sqlite3:7.0.6
+IMAGENAME=douglasportugal/zbx-prx-sqlite3
+IMAGETAG=7.0.6
 
-docker images | grep -i ${IMAGETAG} | awk '{print $3}' | xargs docker rmi -f
-docker build -t ${IMAGETAG} -f ${DCKPATH}/Dockerfile ${DCKPATH}
+docker images | grep -i ${IMAGENAME} | awk '{print $3}' | xargs docker rmi -f
+docker build -t ${IMAGENAME}:${IMAGETAG} -f ${DCKPATH}/Dockerfile ${DCKPATH}
