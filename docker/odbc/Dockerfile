@@ -5,7 +5,7 @@ USER root
 COPY odbcinst.ini /etc/
 
 RUN cd ./ && \
-# curl https://packages.microsoft.com/config/rhel/9/prod.repo | tee /etc/yum.repos.d/mssql-release.repo && \
+curl https://packages.microsoft.com/config/rhel/9/prod.repo | tee /etc/yum.repos.d/mssql-release.repo && \
 # ACCEPT_EULA=Y microdnf install -y tar gzip openssl libaio unixODBC-devel msodbcsql17 msodbcsql18 mariadb-connector-odbc postgresql-odbc && \
 microdnf install -y wget tar gzip openssl libaio unixODBC-devel mariadb-connector-odbc postgresql-odbc && \
 wget https://packages.microsoft.com/rhel/9/prod/Packages/m/msodbcsql17-17.10.6.1-1.x86_64.rpm && \
