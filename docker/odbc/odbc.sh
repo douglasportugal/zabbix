@@ -1,12 +1,13 @@
 cd ./ && \
 curl https://packages.microsoft.com/config/rhel/9/prod.repo | tee /etc/yum.repos.d/mssql-release.repo && \
 ACCEPT_EULA=Y microdnf install -y tar gzip openssl libaio libnsl unixODBC-devel msodbcsql17 msodbcsql18 mariadb-connector-odbc postgresql-odbc && \
-rpm -Uvh https://download.oracle.com/otn_software/linux/instantclient/1919000/oracle-instantclient19.19-basic-19.19.0.0.0-1.el9.x86_64.rpm && \
-rpm -Uvh https://download.oracle.com/otn_software/linux/instantclient/1919000/oracle-instantclient19.19-sqlplus-19.19.0.0.0-1.el9.x86_64.rpm && \
-rpm -Uvh https://download.oracle.com/otn_software/linux/instantclient/1919000/oracle-instantclient19.19-odbc-19.19.0.0.0-1.el9.x86_64.rpm && \
-#rpm -Uvh https://download.oracle.com/otn_software/linux/instantclient/2350000/oracle-instantclient-basic-23.5.0.24.07-1.el9.x86_64.rpm && \
-#rpm -Uvh https://download.oracle.com/otn_software/linux/instantclient/2350000/oracle-instantclient-sqlplus-23.5.0.24.07-1.el9.x86_64.rpm && \
-#rpm -Uvh https://download.oracle.com/otn_software/linux/instantclient/2350000/oracle-instantclient-odbc-23.5.0.24.07-1.el9.x86_64.rpm && \
+rpm -i *.rpm
+# rpm -Uvh https://download.oracle.com/otn_software/linux/instantclient/1919000/oracle-instantclient19.19-basic-19.19.0.0.0-1.el9.x86_64.rpm && \
+# rpm -Uvh https://download.oracle.com/otn_software/linux/instantclient/1919000/oracle-instantclient19.19-sqlplus-19.19.0.0.0-1.el9.x86_64.rpm && \
+# rpm -Uvh https://download.oracle.com/otn_software/linux/instantclient/1919000/oracle-instantclient19.19-odbc-19.19.0.0.0-1.el9.x86_64.rpm && \
+# rpm -Uvh https://download.oracle.com/otn_software/linux/instantclient/2350000/oracle-instantclient-basic-23.5.0.24.07-1.el9.x86_64.rpm && \
+# rpm -Uvh https://download.oracle.com/otn_software/linux/instantclient/2350000/oracle-instantclient-sqlplus-23.5.0.24.07-1.el9.x86_64.rpm && \
+# rpm -Uvh https://download.oracle.com/otn_software/linux/instantclient/2350000/oracle-instantclient-odbc-23.5.0.24.07-1.el9.x86_64.rpm && \
 rpm -Uvh https://kojipkgs.fedoraproject.org//packages/freetds/1.4.23/1.el9/x86_64/freetds-libs-1.4.23-1.el9.x86_64.rpm https://kojipkgs.fedoraproject.org//packages/freetds/1.4.23/1.el9/x86_64/freetds-1.4.23-1.el9.x86_64.rpm https://kojipkgs.fedoraproject.org//packages/freetds/1.4.23/1.el9/x86_64/freetds-devel-1.4.23-1.el9.x86_64.rpm && \
 sed -i '1s/^/openssl_conf = default_conf\n/' /etc/ssl/openssl.cnf && \
     echo "" >> /etc/ssl/openssl.cnf && \
