@@ -1,6 +1,6 @@
 cd ./ && \
 curl https://packages.microsoft.com/config/rhel/9/prod.repo | tee /etc/yum.repos.d/mssql-release.repo && \
-ACCEPT_EULA=Y microdnf install -y tar gzip openssl libaio libnsl msodbcsql17 msodbcsql18 mariadb-connector-odbc postgresql-odbc && \
+ACCEPT_EULA=Y microdnf install -y tar gzip openssl libaio libnsl msodbcsql17 msodbcsql18 mariadb-connector-odbc postgresql-odbc pkg-config && \
 rpm -iv oracle-instantclient11.2-basic-11.2.0.4.0-1.x86_64.rpm && \
 rpm -iv oracle-instantclient11.2-odbc-11.2.0.4.0-1.x86_64.rpm && \
 rpm -iv oracle-instantclient11.2-sqlplus-11.2.0.4.0-1.x86_64.rpm && \
