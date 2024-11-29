@@ -4,6 +4,7 @@ ACCEPT_EULA=Y microdnf install -y tar gzip openssl libaio libnsl msodbcsql17 mso
 rpm -iv oracle-instantclient11.2-basic-11.2.0.4.0-1.x86_64.rpm && \
 rpm -iv oracle-instantclient11.2-odbc-11.2.0.4.0-1.x86_64.rpm && \
 rpm -iv oracle-instantclient11.2-sqlplus-11.2.0.4.0-1.x86_64.rpm && \
+rpm -iv unixODBC-devel-2.3.9-4.el9.x86_64.rpm && \
 ln -s /usr/lib64/libodbcinst.so.2 /usr/lib/oracle/11.2/client64/lib/libodbcinst.so.1 && \
 chmod +x /usr/lib/oracle/11.2/client64/lib/libodbcinst.so.1 && \
 # rpm -Uvh https://download.oracle.com/otn_software/linux/instantclient/1919000/oracle-instantclient19.19-basic-19.19.0.0.0-1.el9.x86_64.rpm && \
