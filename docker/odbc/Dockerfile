@@ -3,5 +3,5 @@ FROM zabbix/zabbix-proxy-sqlite3:ol-7.0.7
 USER root
 
 COPY odbc.sh ./
-RUN bash ./odbc.sh
+RUN ./odbc.sh
 COPY odbcinst.ini /etc/
